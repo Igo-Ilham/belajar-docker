@@ -1,3 +1,6 @@
+
+version: '3.8'
+
 services:
   db:
     image: postgres:16-alpine
@@ -10,7 +13,24 @@ services:
     ports:
       - "${DB_PORT}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+
+  db-backup:
+    image: prodrigestivill/postgres-backup-local:16
+    container_name: postgres_backup
+    restart: always
+    environment:
+      # KOREKSI: Tanda strip (-) dihapus agar formatnya sama dengan layanan 'db'
+      POSTGRES_HOST: db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      BACKUP_NUM_KEEP: 7        # Menyimpan cadangan selama 7 hari terakhir
+      BACKUP_FREQUENCY: daily   # Otomatis backup setiap hari
+    volumes:
+      - ./my_backups:/backups    # File cadangan akan disimpan di folder 'my_backups' di komputer Anda
+    depends_on:
+      - db
 
 volumes:
-  pgdata:
+  postgres_data:
